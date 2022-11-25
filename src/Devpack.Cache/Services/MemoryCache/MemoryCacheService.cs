@@ -5,6 +5,7 @@ namespace Devpack.Cache.Services.MemoryCache
     public class MemoryCacheService : IMemoryCacheService
     {
         private readonly IMemoryCache _memoryCache;
+        private readonly TimeSpan _cacheDefaultTmeout = TimeSpan.FromHours(1);
 
         public MemoryCacheService(IMemoryCache memoryCache)
         {
@@ -21,7 +22,12 @@ namespace Devpack.Cache.Services.MemoryCache
 
         public void Save(string key, object? data)
         {
-            _memoryCache.Set(key, data);
+            Save(key, data, _cacheDefaultTmeout);
+        }
+
+        public void Save(string key, object? data, TimeSpan lifetime)
+        {
+            _memoryCache.Set(key, data, lifetime);
         }
     }
 }

@@ -52,9 +52,9 @@ namespace Devpack.Cache.Tests
             expectedCacheValue.Should().Be(0);
         }
 
-        [Fact(DisplayName = "Deve falvar o dado em mempória quando uma chave for passada.")]
+        [Fact(DisplayName = "Deve salvar o dado em memória quando uma chave for passada.")]
         [Trait("Category", "Services")]
-        public void Save()
+        public void Save_UsingDefaultLifetime()
         {
             var cacheKey = Guid.NewGuid().ToString();
             var cachedData = Guid.NewGuid();
@@ -62,6 +62,22 @@ namespace Devpack.Cache.Tests
             var service = new MemoryCacheService(_memoryCacheMock.Object);
 
             service.Invoking(s => s.Save(cacheKey, cachedData)).Should()
+                .Throw<NullReferenceException>();
+
+            _memoryCacheMock.Verify(m => m.CreateEntry(cacheKey), Times.Once);
+        }
+
+        [Fact(DisplayName = "Deve salvar o dado em memória quando uma chave e um tempo de expiração do cache forem passados.")]
+        [Trait("Category", "Services")]
+        public void Save_UsingCustomLifetime()
+        {
+            var cacheKey = Guid.NewGuid().ToString();
+            var cachedData = Guid.NewGuid();
+            var cacheLifetime = TimeSpan.FromMinutes(5);
+
+            var service = new MemoryCacheService(_memoryCacheMock.Object);
+
+            service.Invoking(s => s.Save(cacheKey, cachedData, cacheLifetime)).Should()
                 .Throw<NullReferenceException>();
 
             _memoryCacheMock.Verify(m => m.CreateEntry(cacheKey), Times.Once);

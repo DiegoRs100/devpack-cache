@@ -16,12 +16,23 @@ namespace Devpack.Cache
             return GetFromService(_memoryCacheService, cacheKey, func);
         }
 
-        public async Task<TResult> GetFromMemoryAsync<TResult>(string cacheKey, Func<Task<TResult>> func)
+        public TResult GetFromMemory<TResult>(string cacheKey, TimeSpan lifetime, Func<TResult> func)
         {
-            return await GetFromServiceAsync(_memoryCacheService, cacheKey, func);
+            return GetFromService(_memoryCacheService, cacheKey, func, lifetime);
         }
 
-        private static TResult GetFromService<TResult>(ICacheService cacheService, string cacheKey, Func<TResult> func)
+        public Task<TResult> GetFromMemoryAsync<TResult>(string cacheKey, Func<Task<TResult>> func)
+        {
+            return GetFromServiceAsync(_memoryCacheService, cacheKey, func);
+        }
+
+        public Task<TResult> GetFromMemoryAsync<TResult>(string cacheKey, TimeSpan lifetime, Func<Task<TResult>> func)
+        {
+            return GetFromServiceAsync(_memoryCacheService, cacheKey, func, lifetime);
+        }
+
+        private static TResult GetFromService<TResult>(ICacheService cacheService, string cacheKey, Func<TResult> func, 
+            TimeSpan? lifetime = null)
         {
             var hasCache = cacheService.Get<TResult>(cacheKey, out var cachedData);
 
@@ -29,12 +40,17 @@ namespace Devpack.Cache
                 return cachedData;
 
             var result = func.Invoke();
-            cacheService.Save(cacheKey, result);
+
+            if (lifetime.HasValue)
+                cacheService.Save(cacheKey, result, lifetime.Value);
+            else
+                cacheService.Save(cacheKey, result);
 
             return result;
         }
 
-        private static async Task<TResult> GetFromServiceAsync<TResult>(ICacheService cacheService, string cacheKey, Func<Task<TResult>> func)
+        private static async Task<TResult> GetFromServiceAsync<TResult>(ICacheService cacheService, string cacheKey, Func<Task<TResult>> func,
+            TimeSpan? lifetime = null)
         {
             var hasCache = cacheService.Get<TResult>(cacheKey, out var cachedData);
 
@@ -42,7 +58,11 @@ namespace Devpack.Cache
                 return cachedData;
 
             var result = await func.Invoke();
-            cacheService.Save(cacheKey, result!);
+
+            if (lifetime.HasValue)
+                cacheService.Save(cacheKey, result, lifetime.Value);
+            else
+                cacheService.Save(cacheKey, result);
 
             return result;
         }

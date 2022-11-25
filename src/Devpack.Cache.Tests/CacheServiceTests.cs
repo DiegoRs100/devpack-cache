@@ -54,6 +54,26 @@ namespace Devpack.Cache.Tests
             _memoryCacheServiceMock.Verify(m => m.Save(cacheKey, expectedResult), Times.Once);
         }
 
+        [Fact(DisplayName = "Deve gerar obter o dado do delegate " +
+            "quando o mesmo não existir em memória e o tempo de expiração for informado. - Sync Method.")]
+        [Trait("Category", "Services")]
+        public void GetFromMemory_UsingCacheLifetime()
+        {
+            // Arrange
+            var cacheKey = Guid.NewGuid().ToString();
+            var expectedResult = Guid.NewGuid();
+            var cacheLifetime = TimeSpan.FromMinutes(5);
+
+            var service = new CacheService(_memoryCacheServiceMock.Object);
+
+            // Act
+            var result = service.GetFromMemory(cacheKey, cacheLifetime, () => expectedResult);
+
+            // Asserts
+            result.Should().Be(expectedResult);
+            _memoryCacheServiceMock.Verify(m => m.Save(cacheKey, expectedResult, cacheLifetime), Times.Once);
+        }
+
         [Fact(DisplayName = "Deve gerar obter o dado do cache quando o mesmo existir em memória - Async Method.")]
         [Trait("Category", "Services")]
         public async Task GetFromMemoryAsync_WhenCache()
@@ -90,6 +110,26 @@ namespace Devpack.Cache.Tests
             // Asserts
             result.Should().Be(expectedResult);
             _memoryCacheServiceMock.Verify(m => m.Save(cacheKey, expectedResult), Times.Once);
+        }
+
+        [Fact(DisplayName = "Deve gerar obter o dado do delegate quando " +
+            "o mesmo não existir em memória e o tempo de expiração for informado. - Async Method.")]
+        [Trait("Category", "Services")]
+        public async Task GetFromMemoryAsync_UsingCacheLifetime()
+        {
+            // Arrange
+            var cacheKey = Guid.NewGuid().ToString();
+            var expectedResult = Guid.NewGuid();
+            var cacheLifetime = TimeSpan.FromMinutes(5);
+
+            var service = new CacheService(_memoryCacheServiceMock.Object);
+
+            // Act
+            var result = await service.GetFromMemoryAsync(cacheKey, cacheLifetime, () => Task.FromResult(expectedResult));
+
+            // Asserts
+            result.Should().Be(expectedResult);
+            _memoryCacheServiceMock.Verify(m => m.Save(cacheKey, expectedResult, cacheLifetime), Times.Once);
         }
     }
 }
